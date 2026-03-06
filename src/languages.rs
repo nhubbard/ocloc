@@ -382,7 +382,8 @@ fn detect_pp_language(content: &str, _content_lower: &str, candidates: &[usize])
     // Pascal indicators
     if content.contains("program ")
         || content.contains("procedure ")
-        || (content.contains("function ") && (content.contains("begin") || content.contains("Begin")))
+        || (content.contains("function ")
+            && (content.contains("begin") || content.contains("Begin")))
         || content.contains("uses ")
     {
         return candidates
@@ -771,17 +772,13 @@ mod tests {
         let result = detect_m_language(content, &content.to_lowercase(), &candidates)
             .map(|idx| &REGISTRY.specs[idx].name);
         // Should detect MATLAB or Octave
-        assert!(
-            result == Some(&"MATLAB".to_string()) || result == Some(&"Octave".to_string())
-        );
+        assert!(result == Some(&"MATLAB".to_string()) || result == Some(&"Octave".to_string()));
 
         // Test with fprintf
         let content = "fprintf('Hello %d\\n', 42);\n";
         let result = detect_m_language(content, &content.to_lowercase(), &candidates)
             .map(|idx| &REGISTRY.specs[idx].name);
-        assert!(
-            result == Some(&"MATLAB".to_string()) || result == Some(&"Octave".to_string())
-        );
+        assert!(result == Some(&"MATLAB".to_string()) || result == Some(&"Octave".to_string()));
     }
 
     #[test]
