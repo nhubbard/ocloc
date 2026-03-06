@@ -224,6 +224,7 @@ fn detect_language_by_content(path: &Path, candidates: &[usize]) -> Option<usize
         "cl" => detect_cl_language(&content, &content_lower, candidates),
         "pp" => detect_pp_language(&content, &content_lower, candidates),
         "il" => detect_il_language(&content, &content_lower, candidates),
+        "ils" => detect_ils_language(&content, &content_lower, candidates),
         "cj" => detect_cj_language(&content, &content_lower, candidates),
         _ => None,
     }
@@ -431,6 +432,30 @@ fn detect_il_language(content: &str, _content_lower: &str, candidates: &[usize])
         .copied()
 }
 
+/// Detect .ils files: SKILL vs SKILL++
+fn detect_ils_language(content: &str, _content_lower: &str, candidates: &[usize]) -> Option<usize> {
+    let specs = &REGISTRY.specs;
+
+    // SKILL++ indicators (object-oriented features)
+    if content.contains("class(")
+        || content.contains("defclass(")
+        || content.contains("defmethod(")
+        || content.contains("self->")
+    {
+        return candidates
+            .iter()
+            .find(|&&idx| specs[idx].name == "SKILL++")
+            .copied();
+    }
+
+    // Default to SKILL (base language is more common)
+    candidates
+        .iter()
+        .find(|&&idx| specs[idx].name == "SKILL")
+        .copied()
+        .or_else(|| candidates.first().copied())
+}
+
 /// Detect .cj files: Cangjie vs Clojure
 fn detect_cj_language(content: &str, _content_lower: &str, candidates: &[usize]) -> Option<usize> {
     let specs = &REGISTRY.specs;
@@ -621,7 +646,8 @@ mod tests {
         let mut specials = HashSet::new();
 
         // Known acceptable conflicts (handled by content-based detection or are related variants)
-        let acceptable_conflicts = ["m", "v", "cl", "pp", "il", "cj"];
+        // Note: Only include extensions that actually have conflicts in languages.json
+        let acceptable_conflicts = ["m", "il", "ils"];
 
         for s in specs {
             assert!(!s.name.trim().is_empty(), "language name must be non-empty");
@@ -654,6 +680,16 @@ mod tests {
             assert!(
                 langs.len() <= 1 || acceptable_conflicts.contains(&ext.as_str()),
                 "Unexpected extension conflict: .{ext} claimed by: {langs:?}"
+            );
+        }
+
+        // Verify all conflicting extensions have handlers in detect_language_by_content
+        // Extensions with handlers: m, v, cl, pp, il, cj (some may be defensive for future use)
+        let handled_extensions = ["m", "v", "cl", "pp", "il", "ils", "cj"];
+        for (ext, _) in &REGISTRY.conflicting_exts {
+            assert!(
+                handled_extensions.contains(&ext.as_str()),
+                "Extension '{ext}' has conflicts but no handler in detect_language_by_content. Add a detect_{ext}_language function."
             );
         }
     }
@@ -1063,27 +1099,42 @@ mod tests {
             assert_eq!(lang, "Objective-C");
         }
 
-        // Test .v file with Verilog content
-        let verilog_file = dir.path().join("test.v");
+        // Test .m file with MATLAB content
+        let matlab_file = dir.path().join("test2.m");
         {
-            let mut f = File::create(&verilog_file).unwrap();
-            writeln!(f, "module counter(clk, reset);").unwrap();
-            writeln!(f, "  wire clk;").unwrap();
-            writeln!(f, "endmodule").unwrap();
+            let mut f = File::create(&matlab_file).unwrap();
+            writeln!(f, "% MATLAB function").unwrap();
+            writeln!(f, "function result = myFunc(x)").unwrap();
+            writeln!(f, "    result = x * 2;").unwrap();
+            writeln!(f, "end").unwrap();
         }
-        if let Some(lang) = find_language_for_path(&verilog_file) {
-            assert!(lang.contains("Verilog"));
+        if let Some(lang) = find_language_for_path(&matlab_file) {
+            assert!(
+                lang == "MATLAB" || lang == "Octave",
+                "Expected MATLAB or Octave but got: {lang}"
+            );
         }
 
-        // Test .cl file with Lisp content
-        let lisp_file = dir.path().join("test.cl");
+        // Test .v file with Coq content (Verilog uses .sv, not .v)
+        let coq_file = dir.path().join("test.v");
         {
-            let mut f = File::create(&lisp_file).unwrap();
-            writeln!(f, "(defun factorial (n)").unwrap();
-            writeln!(f, "  (if (<= n 1) 1 (* n (factorial (- n 1)))))").unwrap();
+            let mut f = File::create(&coq_file).unwrap();
+            writeln!(f, "Theorem add_comm : forall n m, n + m = m + n.").unwrap();
+            writeln!(f, "Proof.").unwrap();
         }
-        if let Some(lang) = find_language_for_path(&lisp_file) {
-            assert_eq!(lang, "Lisp");
+        if let Some(lang) = find_language_for_path(&coq_file) {
+            assert_eq!(lang, "Coq");
+        }
+
+        // Test .il file with .NET IL content
+        let il_file = dir.path().join("test.il");
+        {
+            let mut f = File::create(&il_file).unwrap();
+            writeln!(f, ".assembly extern mscorlib {{}}").unwrap();
+            writeln!(f, ".class public MyClass").unwrap();
+        }
+        if let Some(lang) = find_language_for_path(&il_file) {
+            assert_eq!(lang, ".NET IL");
         }
     }
 }
