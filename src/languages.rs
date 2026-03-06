@@ -621,7 +621,7 @@ mod tests {
         let mut specials = HashSet::new();
 
         // Known acceptable conflicts (handled by content-based detection or are related variants)
-        let acceptable_conflicts = ["m", "v", "cl", "pp", "il", "ils", "cj"];
+        let acceptable_conflicts = ["m", "v", "cl", "pp", "il", "cj"];
 
         for s in specs {
             assert!(!s.name.trim().is_empty(), "language name must be non-empty");
