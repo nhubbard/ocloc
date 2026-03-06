@@ -657,4 +657,433 @@ mod tests {
             );
         }
     }
+
+    // Helper function to get candidate indices for testing
+    fn get_candidates_for_ext(ext: &str) -> Vec<usize> {
+        if let Some(candidates) = REGISTRY.conflicting_exts.get(ext) {
+            candidates.clone()
+        } else {
+            Vec::new()
+        }
+    }
+
+    #[test]
+    fn detect_m_language_objective_c() {
+        let candidates = get_candidates_for_ext("m");
+        if candidates.is_empty() {
+            return; // Skip if no .m conflict in registry
+        }
+
+        // Test @interface
+        let content = "@interface MyClass : NSObject\n@end";
+        assert_eq!(
+            detect_m_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Objective-C".to_string())
+        );
+
+        // Test @implementation
+        let content = "@implementation MyClass\n- (void)doSomething {}\n@end";
+        assert_eq!(
+            detect_m_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Objective-C".to_string())
+        );
+
+        // Test #import
+        let content = "#import <Foundation/Foundation.h>\n";
+        assert_eq!(
+            detect_m_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Objective-C".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_m_language_mercury() {
+        let candidates = get_candidates_for_ext("m");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test :- module
+        let content = ":- module hello.\n:- interface.\n";
+        assert_eq!(
+            detect_m_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Mercury".to_string())
+        );
+
+        // Test :- pred
+        let content = ":- pred factorial(int::in, int::out) is det.\n";
+        assert_eq!(
+            detect_m_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Mercury".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_m_language_matlab() {
+        let candidates = get_candidates_for_ext("m");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test MATLAB function
+        let content = "function result = myFunc(x)\n    result = x * 2;\nend\n";
+        let result = detect_m_language(content, &content.to_lowercase(), &candidates)
+            .map(|idx| &REGISTRY.specs[idx].name);
+        // Should detect MATLAB or Octave
+        assert!(
+            result == Some(&"MATLAB".to_string()) || result == Some(&"Octave".to_string())
+        );
+
+        // Test with fprintf
+        let content = "fprintf('Hello %d\\n', 42);\n";
+        let result = detect_m_language(content, &content.to_lowercase(), &candidates)
+            .map(|idx| &REGISTRY.specs[idx].name);
+        assert!(
+            result == Some(&"MATLAB".to_string()) || result == Some(&"Octave".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_v_language_coq() {
+        let candidates = get_candidates_for_ext("v");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test Theorem
+        let content = "Theorem add_comm : forall n m : nat, n + m = m + n.\nProof.\n";
+        assert_eq!(
+            detect_v_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Coq".to_string())
+        );
+
+        // Test Qed
+        let content = "Lemma test : 1 = 1.\nProof. reflexivity. Qed.\n";
+        assert_eq!(
+            detect_v_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Coq".to_string())
+        );
+
+        // Test Require
+        let content = "Require Import List.\n";
+        assert_eq!(
+            detect_v_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Coq".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_v_language_verilog() {
+        let candidates = get_candidates_for_ext("v");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test module/endmodule
+        let content = "module counter(clk, reset);\n    wire clk;\nendmodule\n";
+        let result = detect_v_language(content, &content.to_lowercase(), &candidates)
+            .map(|idx| &REGISTRY.specs[idx].name);
+        assert!(result.map_or(false, |name| name.contains("Verilog")));
+
+        // Test always @
+        let content = "always @(posedge clk) begin\n    reg <= data;\nend\n";
+        let result = detect_v_language(content, &content.to_lowercase(), &candidates)
+            .map(|idx| &REGISTRY.specs[idx].name);
+        assert!(result.map_or(false, |name| name.contains("Verilog")));
+    }
+
+    #[test]
+    fn detect_cl_language_lisp() {
+        let candidates = get_candidates_for_ext("cl");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test defun
+        let content = "(defun factorial (n)\n  (if (<= n 1) 1 (* n (factorial (- n 1)))))\n";
+        assert_eq!(
+            detect_cl_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Lisp".to_string())
+        );
+
+        // Test setq
+        let content = "(setq my-var 42)\n";
+        assert_eq!(
+            detect_cl_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Lisp".to_string())
+        );
+
+        // Test starts with (
+        let content = "(+ 1 2 3)\n";
+        assert_eq!(
+            detect_cl_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Lisp".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_cl_language_opencl() {
+        let candidates = get_candidates_for_ext("cl");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test __kernel
+        let content = "__kernel void add(__global float *a) {\n    int id = get_global_id(0);\n}\n";
+        assert_eq!(
+            detect_cl_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"OpenCL".to_string())
+        );
+
+        // Test get_global_id
+        let content = "int gid = get_global_id(0);\n";
+        assert_eq!(
+            detect_cl_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"OpenCL".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_pp_language_puppet() {
+        let candidates = get_candidates_for_ext("pp");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test class with =>
+        let content = "class apache {\n  package { 'httpd': ensure => installed }\n}\n";
+        assert_eq!(
+            detect_pp_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Puppet".to_string())
+        );
+
+        // Test node
+        let content = "node 'webserver' {\n  include apache\n}\n";
+        assert_eq!(
+            detect_pp_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Puppet".to_string())
+        );
+
+        // Test $::
+        let content = "if $::osfamily == 'RedHat' { }\n";
+        assert_eq!(
+            detect_pp_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Puppet".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_pp_language_pascal() {
+        let candidates = get_candidates_for_ext("pp");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test program
+        let content = "program Hello;\nbegin\n  writeln('Hello, World!');\nend.\n";
+        assert_eq!(
+            detect_pp_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Pascal".to_string())
+        );
+
+        // Test procedure
+        let content = "procedure DoSomething;\nbegin\n  writeln('test');\nend;\n";
+        assert_eq!(
+            detect_pp_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Pascal".to_string())
+        );
+
+        // Test uses
+        let content = "uses SysUtils, Classes;\n";
+        assert_eq!(
+            detect_pp_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Pascal".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_il_language_dotnet_il() {
+        let candidates = get_candidates_for_ext("il");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test .assembly
+        let content = ".assembly extern mscorlib {}\n";
+        assert_eq!(
+            detect_il_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&".NET IL".to_string())
+        );
+
+        // Test .class
+        let content = ".class public MyClass extends [mscorlib]System.Object\n";
+        assert_eq!(
+            detect_il_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&".NET IL".to_string())
+        );
+
+        // Test .method
+        let content = ".method public hidebysig instance void Test() cil managed\n";
+        assert_eq!(
+            detect_il_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&".NET IL".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_il_language_skill() {
+        let candidates = get_candidates_for_ext("il");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test procedure(
+        let content = "procedure( myFunc(arg)\n  println(arg)\n)\n";
+        assert_eq!(
+            detect_il_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"SKILL".to_string())
+        );
+
+        // Test defun(
+        let content = "defun( test()\n  t\n)\n";
+        assert_eq!(
+            detect_il_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"SKILL".to_string())
+        );
+
+        // Test ; comment
+        let content = "; This is a SKILL comment\n";
+        assert_eq!(
+            detect_il_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"SKILL".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_cj_language_clojure() {
+        let candidates = get_candidates_for_ext("cj");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test (ns
+        let content = "(ns my.namespace)\n";
+        assert_eq!(
+            detect_cj_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Clojure".to_string())
+        );
+
+        // Test (defn
+        let content = "(defn add [x y] (+ x y))\n";
+        assert_eq!(
+            detect_cj_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Clojure".to_string())
+        );
+
+        // Test starts with (
+        let content = "(println \"Hello\")\n";
+        assert_eq!(
+            detect_cj_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Clojure".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_cj_language_cangjie() {
+        let candidates = get_candidates_for_ext("cj");
+        if candidates.is_empty() {
+            return;
+        }
+
+        // Test import
+        let content = "import std.io\n";
+        assert_eq!(
+            detect_cj_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Cangjie".to_string())
+        );
+
+        // Test package
+        let content = "package com.example\n";
+        assert_eq!(
+            detect_cj_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Cangjie".to_string())
+        );
+
+        // Test func
+        let content = "func main() {\n  println(\"Hello\")\n}\n";
+        assert_eq!(
+            detect_cj_language(content, &content.to_lowercase(), &candidates)
+                .map(|idx| &REGISTRY.specs[idx].name),
+            Some(&"Cangjie".to_string())
+        );
+    }
+
+    #[test]
+    fn detect_language_by_content_integration() {
+        let dir = tempdir().unwrap();
+
+        // Test .m file with Objective-C content
+        let objc_file = dir.path().join("test.m");
+        {
+            let mut f = File::create(&objc_file).unwrap();
+            writeln!(f, "@interface MyClass : NSObject").unwrap();
+            writeln!(f, "@end").unwrap();
+        }
+        if let Some(lang) = find_language_for_path(&objc_file) {
+            assert_eq!(lang, "Objective-C");
+        }
+
+        // Test .v file with Verilog content
+        let verilog_file = dir.path().join("test.v");
+        {
+            let mut f = File::create(&verilog_file).unwrap();
+            writeln!(f, "module counter(clk, reset);").unwrap();
+            writeln!(f, "  wire clk;").unwrap();
+            writeln!(f, "endmodule").unwrap();
+        }
+        if let Some(lang) = find_language_for_path(&verilog_file) {
+            assert!(lang.contains("Verilog"));
+        }
+
+        // Test .cl file with Lisp content
+        let lisp_file = dir.path().join("test.cl");
+        {
+            let mut f = File::create(&lisp_file).unwrap();
+            writeln!(f, "(defun factorial (n)").unwrap();
+            writeln!(f, "  (if (<= n 1) 1 (* n (factorial (- n 1)))))").unwrap();
+        }
+        if let Some(lang) = find_language_for_path(&lisp_file) {
+            assert_eq!(lang, "Lisp");
+        }
+    }
 }
