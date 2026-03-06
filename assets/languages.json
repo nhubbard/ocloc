@@ -18,7 +18,7 @@
       "abap"
     ],
     "line_markers": [
-      "\\*"
+      "*"
     ],
     "block_markers": null
   },
@@ -303,7 +303,7 @@
       "--",
       "//",
       ";",
-      "\\*"
+      "*"
     ],
     "block_markers": [
       "/*",
@@ -750,6 +750,7 @@
   {
     "name": "Clojure",
     "extensions": [
+      "cj",
       "boot",
       "cl2",
       "clj",
@@ -1265,7 +1266,7 @@
       "focexec"
     ],
     "line_markers": [
-      "\\*"
+      "*"
     ],
     "block_markers": null
   },
@@ -1640,7 +1641,7 @@
     ],
     "line_markers": [
       "//",
-      "\\*"
+      "*"
     ],
     "block_markers": [
       "/*",
@@ -2215,6 +2216,7 @@
     "name": "Lisp",
     "extensions": [
       "asd",
+      "cl",
       "el",
       "lisp",
       "lsp"
@@ -2514,13 +2516,11 @@
       "\ud83d\udd25"
     ],
     "line_markers": [
-      "#",
-      "//",
-      "\\*"
+      "#"
     ],
     "block_markers": [
-      "/*",
-      "*/"
+      "\"\"\"",
+      "\"\"\""
     ]
   },
   {
@@ -2529,11 +2529,11 @@
       "mojom"
     ],
     "line_markers": [
-      "//"
+      "#"
     ],
     "block_markers": [
-      "/*",
-      "*/"
+      "\"\"\"",
+      "\"\"\""
     ]
   },
   {
@@ -2928,6 +2928,7 @@
   {
     "name": "Pascal",
     "extensions": [
+      "pp",
       "dpr",
       "lpr",
       "pas",
@@ -3233,13 +3234,11 @@
       "xpy"
     ],
     "line_markers": [
-      "#",
-      "//",
-      "\\*"
+      "#"
     ],
     "block_markers": [
-      "/*",
-      "*/"
+      "\"\"\"",
+      "\"\"\""
     ]
   },
   {
@@ -3431,7 +3430,7 @@
     ],
     "line_markers": [
       "#",
-      "\\*"
+      "*"
     ],
     "block_markers": null
   },
@@ -3947,7 +3946,7 @@
       "tla"
     ],
     "line_markers": [
-      "\\*"
+      "*"
     ],
     "block_markers": null
   },
@@ -4290,6 +4289,7 @@
   {
     "name": "Verilog-SystemVerilog",
     "extensions": [
+      "v",
       "sv",
       "svh"
     ],
@@ -4998,7 +4998,7 @@
     ],
     "line_markers": [
       "//",
-      "\\*"
+      "*"
     ],
     "block_markers": [
       "/*",
@@ -5012,7 +5012,7 @@
     ],
     "line_markers": [
       "//",
-      "\\*"
+      "*"
     ],
     "block_markers": [
       "/*",
