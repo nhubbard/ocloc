@@ -87,7 +87,7 @@ pub fn run() -> Result<()> {
     if let Some(cmd) = &args.cmd {
         return match cmd {
             Subcommand::Diff(diff_args) => sub_diff::run_diff(diff_args),
-        }
+        };
     }
     run_impl::run_with_args(&args)
 }

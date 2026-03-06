@@ -61,7 +61,8 @@ pub fn analyze_reader<R: BufRead + ?Sized>(reader: &mut R, path_hint: &Path) -> 
     // Obtain markers
     #[allow(clippy::items_after_statements)]
     type MarkersTuple = (&'static [Vec<u8>], Option<(&'static [u8], &'static [u8])>);
-    let (line_markers_vec, block_markers_bytes): MarkersTuple = lang_idx.map_or((&[], None), language_markers_bytes);
+    let (line_markers_vec, block_markers_bytes): MarkersTuple =
+        lang_idx.map_or((&[], None), language_markers_bytes);
 
     // Fast zero-byte file handling if possible
     if let Ok(slice) = reader.fill_buf() {

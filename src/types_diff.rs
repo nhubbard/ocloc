@@ -13,7 +13,11 @@ pub struct LineDelta {
 
 impl LineDelta {
     #[allow(clippy::cast_possible_wrap)]
-    pub const fn add_file_delta(&mut self, base: (usize, usize, usize), head: (usize, usize, usize)) {
+    pub const fn add_file_delta(
+        &mut self,
+        base: (usize, usize, usize),
+        head: (usize, usize, usize),
+    ) {
         let (base_code, base_comment, base_blank) = base;
         let (head_code, head_comment, head_blank) = head;
         self.files += 1;

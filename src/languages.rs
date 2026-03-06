@@ -204,7 +204,7 @@ fn detect_language_by_content(path: &Path, candidates: &[usize]) -> Option<usize
     let reader = BufReader::new(file);
     let lines: Vec<String> = reader
         .lines()
-        .take(50)  // Sample first 50 lines
+        .take(50) // Sample first 50 lines
         .filter_map(Result::ok)
         .collect();
 
@@ -263,7 +263,9 @@ fn detect_m_language(content: &str, content_lower: &str, candidates: &[usize]) -
 
     // MATLAB/Octave indicators
     if content.contains("function ")
-        && (content.contains("end\n") || content.contains("end\r") || content_lower.contains("end;"))
+        && (content.contains("end\n")
+            || content.contains("end\r")
+            || content_lower.contains("end;"))
         || content.contains("% ")
         || content_lower.contains("fprintf")
         || content_lower.contains("disp(")
@@ -379,8 +381,7 @@ fn detect_pp_language(content: &str, _content_lower: &str, candidates: &[usize])
     // Pascal indicators
     if content.contains("program ")
         || content.contains("procedure ")
-        || content.contains("function ")
-        && (content.contains("begin") || content.contains("Begin"))
+        || content.contains("function ") && (content.contains("begin") || content.contains("Begin"))
         || content.contains("uses ")
     {
         return candidates
@@ -650,7 +651,8 @@ mod tests {
 
         // Check for unexpected conflicts
         for (ext, langs) in ext_counts {
-            assert!(langs.len() <= 1 || acceptable_conflicts.contains(&ext.as_str()),
+            assert!(
+                langs.len() <= 1 || acceptable_conflicts.contains(&ext.as_str()),
                 "Unexpected extension conflict: .{ext} claimed by: {langs:?}"
             );
         }

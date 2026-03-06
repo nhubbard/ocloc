@@ -20,9 +20,15 @@ pub fn format(a: &AnalyzeResult) -> String {
         output.push_str(
             "═══════════════════════════════════════════════════════════════════════════════════\n",
         );
-        let _ = writeln!(output, "                         REPORT FOR: {}",
-            dir_name.to_uppercase());
-        let _ = writeln!(output, "                         Generated: {friendly_date}");
+        let _ = writeln!(
+            output,
+            "                         REPORT FOR: {}",
+            dir_name.to_uppercase()
+        );
+        let _ = writeln!(
+            output,
+            "                         Generated: {friendly_date}"
+        );
         output.push_str("═══════════════════════════════════════════════════════════════════════════════════\n\n");
     }
 
@@ -30,23 +36,38 @@ pub fn format(a: &AnalyzeResult) -> String {
     if let Some(ref stats) = a.stats {
         output.push_str("File Statistics:\n");
         output.push_str("─────────────────────────────────────\n");
-        let _ = writeln!(output, "  Text Files    : {:>10}",
-            format_num(stats.total_files));
-        let _ = writeln!(output, "  Unique Files  : {:>10}",
-            format_num(stats.unique_files));
-        let _ = writeln!(output, "  Ignored Files : {:>10}",
-            format_num(stats.ignored_files));
+        let _ = writeln!(
+            output,
+            "  Text Files    : {:>10}",
+            format_num(stats.total_files)
+        );
+        let _ = writeln!(
+            output,
+            "  Unique Files  : {:>10}",
+            format_num(stats.unique_files)
+        );
+        let _ = writeln!(
+            output,
+            "  Ignored Files : {:>10}",
+            format_num(stats.ignored_files)
+        );
         if stats.empty_files > 0 {
-            let _ = writeln!(output, "  Empty Files   : {:>10}",
-                format_num(stats.empty_files));
+            let _ = writeln!(
+                output,
+                "  Empty Files   : {:>10}",
+                format_num(stats.empty_files)
+            );
         }
         output.push_str("─────────────────────────────────────\n\n");
 
         // Show performance statistics
         output.push_str("Performance:\n");
         output.push_str("─────────────────────────────────────\n");
-        let _ = writeln!(output, "  Elapsed Time  : {:>10.2} s",
-            stats.elapsed_seconds);
+        let _ = writeln!(
+            output,
+            "  Elapsed Time  : {:>10.2} s",
+            stats.elapsed_seconds
+        );
 
         let denom = if stats.elapsed_seconds > 0.0 {
             stats.elapsed_seconds
