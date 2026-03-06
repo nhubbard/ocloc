@@ -54,7 +54,7 @@ pub fn build_walk_builder(root: &Path, opts: &TraversalOptions) -> WalkBuilder {
     builder
 }
 
-#[allow(dead_code, clippy::unnecessary_wraps)]
+#[allow(dead_code)]
 pub fn collect_files(root: &Path, opts: &TraversalOptions) -> Vec<PathBuf> {
     let builder = build_walk_builder(root, opts);
 
