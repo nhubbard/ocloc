@@ -381,7 +381,7 @@ fn detect_pp_language(content: &str, _content_lower: &str, candidates: &[usize])
     // Pascal indicators
     if content.contains("program ")
         || content.contains("procedure ")
-        || content.contains("function ") && (content.contains("begin") || content.contains("Begin"))
+        || (content.contains("function ") && (content.contains("begin") || content.contains("Begin")))
         || content.contains("uses ")
     {
         return candidates
